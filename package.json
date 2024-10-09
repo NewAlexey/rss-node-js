@@ -1,0 +1,10 @@
+{
+  "name": "rss-node-js",
+  "version": "1.0.0",
+  "description": "Repository for rss-node-js tasks",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "NewAlexey",
+  "license": "ISC"
+}
