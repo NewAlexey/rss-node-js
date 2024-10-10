@@ -1,10 +1,21 @@
 import { EOL, cpus, homedir, userInfo, arch } from "os";
 
 import { getArgList } from "./utils.js";
+import { assertIfCondition } from "../utils/assertIfCondition.js";
 
 export class OsService {
-    commandHandler(command) {
+    static #commandMap = {
+        os: (args) => this.commandHandler(args),
+    }
+    
+    static getCommandMap() {
+        return this.#commandMap;
+    }
+    
+    static commandHandler(command) {
         const [_, osCommand] = getArgList(command);
+        
+        assertIfCondition(!osCommand, Error, "Invalid input - missing 'os' command.");
         
         switch (osCommand) {
             case "--EOL": {
@@ -20,7 +31,7 @@ export class OsService {
             }
             
             case "--homedir": {
-                console.log(`System homedir - "${homedir()}".`);
+                console.log(`System homedir - "${this.getHomeDir()}".`);
                 
                 break;
             }
@@ -38,8 +49,12 @@ export class OsService {
             }
             
             default: {
-                console.log(`Unknown "os" command "${osCommand}", try again.`);
+                console.log(`Invalid "os" command "${osCommand}", try again.`);
             }
         }
+    }
+    
+    static getHomeDir() {
+        return homedir();
     }
 }

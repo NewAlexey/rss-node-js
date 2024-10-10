@@ -1,36 +1,21 @@
+import { homedir } from "os";
+
 import { getArgList } from "./utils.js";
-import { OsService } from "./OsService.js";
-import { HashService } from "./HashService.js";
-import { FsService } from "./FsService.js";
 
 export class FileManagerService {
     #userName;
     
-    #osService = new OsService();
-    #hashService = new HashService();
-    #fsService = new FsService();
+    #exitCommandList = ["exit", ".exit"];
     
-    #serviceCommandMap = {
-        os: (args) => this.#osService.commandHandler(args),
-        hash: (args) => this.#hashService.commandHandler(args),
-        ls: (args) => this.#fsService.showDirectoryContentHandler(args),
-        up: (args) => this.#fsService.upHandler(args),
-        cd: (args) => this.#fsService.changeDirectoryHandler(args),
-        cat: (args) => this.#fsService.readFileHandler(args),
-        add: (args) => this.#fsService.addFileHandler(args),
-        rn: (args) => this.#fsService.renameFileHandler(args),
-        cp: (args) => this.#fsService.copyFileHandler(args),
-        rm: (args) => this.#fsService.removeFileHandler(args),
-        mv: (args) => this.#fsService.moveFileHandler(args),
-    }
+    #serviceCommandMap;
     
-    
-    constructor(userName) {
+    constructor(userName, serviceList) {
         if (!userName) {
             throw new Error(`You need to pass username as argument '--username=USER_NAME'.`)
         }
         
         this.#userName = userName;
+        this.#serviceCommandMap = serviceList.reduce((acc, service) => ({ ...acc, ...service.getCommandMap() }), {})
     }
     
     init() {
@@ -40,7 +25,14 @@ export class FileManagerService {
     }
     
     startEvent() {
+        process.chdir(homedir());
+        
         console.log(`Welcome to the File Manager, ${this.#userName}!`);
+        this.consoleCurrentDirectory();
+    }
+    
+    consoleCurrentDirectory() {
+        console.log(`You are currently in ${process.cwd()}\n`);
     }
     
     shutdownEvent() {
@@ -51,10 +43,15 @@ export class FileManagerService {
         process.stdin.on("data", (data) => {
             try {
                 this.commandHandler(this.normalizeData(data));
+                this.logUserActions();
             } catch (error) {
-                console.error(error?.message ?? "Operation failed.");
+                console.error(`Operation failed. ${error?.message ?? ""}`);
             }
         });
+    }
+    
+    logUserActions() {
+        this.consoleCurrentDirectory();
     }
     
     closeHandler() {
@@ -72,25 +69,17 @@ export class FileManagerService {
             return;
         }
         
-        
-        switch (command) {
-            case "exit":
-            case ".exit": {
-                this.closeHandler();
-                
-                break;
-            }
+        if (this.#exitCommandList.includes(command)) {
+            this.closeHandler();
             
-            default: {
-                console.log(`Unknown command "${command}", try again.`);
-            }
+            return;
         }
+        
+        console.error(`Invalid input command "${command}", try again.`);
     }
     
     getServiceCommand(command) {
-        const argList = getArgList(command);
-        
-        return argList[0];
+        return getArgList(command)[0];
     }
     
     normalizeData(data) {

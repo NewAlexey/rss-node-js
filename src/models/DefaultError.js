@@ -1,5 +1,5 @@
 export class DefaultError extends Error {
-    constructor() {
-        super("Operation failed.");
+    constructor(message) {
+        super(`Operation failed. ${message ?? ""}`);
     }
 }
