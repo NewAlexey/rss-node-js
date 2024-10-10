@@ -26,6 +26,7 @@ export class OsService {
             
             case "--cpus": {
                 console.log(`CPU count - "${cpus().length}".`);
+                console.log("CPU information - ", cpus());
                 
                 break;
             }
